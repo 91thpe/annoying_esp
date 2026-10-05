@@ -1,4 +1,4 @@
-# Handoff: ATtiny85 office cricket
+# Handoff: ATtiny85 office annoyance
 
 This is the starting brief for a new repository and a fresh Claude Code
 session. Paste it (or commit it as `docs/HANDOFF.md`) at the start of the new
@@ -10,7 +10,12 @@ is parked.
 A tiny, standalone noise maker hidden in an office. It makes a short,
 puzzling sound ("what the heck is that?") at random intervals, for example
 somewhere between 5 and 15 minutes apart. Each sound is short so nobody can
-walk toward it and find the device. Cricket-like is the first target sound.
+walk toward it and find the device.
+
+**The target is "annoying and hard to place", not realism.** Insect or
+cricket-like rhythms are a starting idea, not a requirement to sound like a
+real cricket. Pick pitch and rhythm for maximum annoyance and minimum
+locatability.
 
 **Keep it very simple.** No radio, no app, no remote control. All
 parameters are compile-time constants at the top of one source file. To
@@ -21,10 +26,10 @@ change behavior, edit and reflash.
 | Item | Detail |
 |------|--------|
 | MCU | ATtiny85, bare DIP-8 |
-| Carrier/power board | AliExpress "ATtiny85 to micro-USB" board with a DIP socket (Digispark-style). Used for USB 5 V power only |
+| Final build | ATtiny85 on an adhesive-backed mini-breadboard. **The AliExpress micro-USB ATtiny85 board is not part of the final design** (at most a bench power source during development) |
 | Programmer | Arduino Mega running the ArduinoISP sketch (owner built it earlier) |
-| Buzzer | 3-wire buzzer module (VCC / GND / signal). **Type not yet confirmed**, see §6 |
-| Power | USB 5 V. A simple latching power switch in the 5 V line. Battery is out of scope |
+| Buzzer | 3-wire buzzer module (VCC / GND / signal). Active or passive not yet confirmed; **either is acceptable to the owner** (see §4.3) |
+| Power | USB 5 V into the breadboard (how exactly is an open question, §6). A simple latching power switch in the 5 V line. Battery is out of scope |
 | Spare parts | 2N3906 PNP transistors (useful now that logic is 5 V) |
 | Dev environment | Owner's VS Code + PlatformIO on their own PC |
 
@@ -33,7 +38,7 @@ change behavior, edit and reflash.
 1. **Power on = running.** There is no arm/disarm switch. The power switch is
    the only control.
 2. **Never sound at power-on.** After power-up, wait a quiet period first
-   (default: 10 min, see open questions), then start the random schedule.
+   (10 min, confirmed by the owner), then start the random schedule.
    The output pin must be held in its "silent" state from reset onward
    (pull resistor, see §5).
 3. **Random interval** uniform in `[INTERVAL_MIN_S, INTERVAL_MAX_S]`
@@ -73,23 +78,31 @@ change behavior, edit and reflash.
 
 ### 4.2 Sound profiles (needs a passive buzzer, except where noted)
 
+The owner wants annoying, not authentic. So: put the carrier in the
+**~2–3 kHz** band (hardest to localize, and near a typical piezo's loudest
+point) rather than at a real cricket's 4.5–5 kHz. Use the insect rhythm
+only because rapid, irregular bursts are irritating and hard to place.
+
 | Profile | Recipe | Notes |
 |---------|--------|-------|
-| **Cricket** (default) | Carrier ~4.5–5 kHz. A chirp is 3–5 syllables at about 20–30 per second (e.g. 15 ms on / 18 ms off). Repeat 1–3 chirps at 2–3 chirps per second | Matches real field crickets: about 4.5–5 kHz carrier, 3–5 pulses per chirp, 20–30 Hz pulse rate, 2–3 chirps/s ([Gryllus bimaculatus, PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC3500458), [Auditory behavior of the cricket](https://link.springer.com/article/10.1007/BF00612706)). A "less authentic but harder to locate" variant moves the carrier down to ~3 kHz |
+| **Cricket-ish** (default) | Carrier ~2.5–3 kHz (a real cricket is ~4.5–5 kHz). A chirp is 3–5 syllables at about 20–30 per second (e.g. 15 ms on / 18 ms off). Repeat 1–3 chirps at 2–3 chirps per second | Rhythm borrowed from field crickets (3–5 pulses per chirp, 20–30 Hz pulse rate, 2–3 chirps/s; [Gryllus bimaculatus, PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC3500458), [Auditory behavior of the cricket](https://link.springer.com/article/10.1007/BF00612706)). Carrier deliberately lowered into the hard-to-locate band |
 | **Lone chirp** | One ~60–100 ms beep around 3 kHz | Reminiscent of a smoke detector's low-battery chirp, which is famously maddening. Caveat for an office: people may report it to facilities or start inspecting smoke detectors |
 | **Tweet** | Fast upward sweep ~2 → 4 kHz in ~60 ms, 1–2 times | Bird or "phone notification from nowhere" |
 | **Tick** | 1–3 very short clicks (1–2 ms pulses) | Barely there. Works with an active buzzer too |
 
-Start with **Cricket** only. Add other profiles one at a time after the
+Start with **Cricket-ish** only. Add other profiles one at a time after the
 owner has heard the first one.
 
 ### 4.3 Active vs passive buzzer
 
 - **Passive** (just a transducer, needs a square wave): any pitch, sweeps,
-  all profiles above. **Required for a convincing cricket.**
+  all profiles above. More variety, so more annoyance.
 - **Active** (built-in oscillator, fixed pitch, typically ~2–4 kHz): only
-  on/off timing. A cricket rhythm (syllable bursts) is still possible but at
-  the buzzer's fixed pitch.
+  on/off timing. Burst rhythms, lone chirps and ticks still work at the
+  buzzer's fixed pitch. **The owner has said that's acceptable.** The
+  firmware should support both via one compile-time switch
+  (`BUZZER_PASSIVE`): passive gets a timer-generated tone, active gets the
+  pin switched on/off with the same rhythm tables.
 - A piezo is loudest at its resonant frequency (often 2.5–4 kHz). The
   `TEST_MODE` build should include a slow frequency sweep, so the owner can
   hear where it's loudest.
@@ -126,21 +139,23 @@ owner has heard the first one.
 ATtiny85 DIP pinout: 1 PB5/RESET, 2 PB3, 3 PB4, 4 GND, 5 PB0, 6 PB1,
 7 PB2, 8 VCC.
 
-- **Avoid PB3 and PB4** when the chip sits in the USB board. Digispark-style
-  boards wire them to USB D−/D+ with zener diodes and a 1.5 kΩ pull-up. This
-  is typical for these boards but not verified for this specific one.
-- **Avoid PB5** (RESET).
-- **Candidates:**
-  - **PB1 / OC1A (Timer1):** frequency *and* duty control, so soft fades are
-    possible. But Digispark-style boards often have an LED on PB1, which
-    would flash with every sound and give the hiding place away. Use PB1
-    only if the board has no LED there, or after removing that LED or its
-    resistor.
-  - **PB0 / OC0A (Timer0, CTC toggle):** clean 50% square wave at any
-    frequency, no duty control. The simplest choice.
+- The final build is a bare chip on a breadboard, so the USB board's
+  constraints (USB lines on PB3/PB4, LED on PB1) **don't apply**. Only
+  **avoid PB5** (RESET).
+- **Use PB1 / OC1A (Timer1)** for the buzzer signal: frequency *and* duty
+  control, so soft fades are possible later. Timer1 on the ATtiny85 can
+  clock from the CPU clock with a wide prescaler range and uses `OCR1C` as
+  TOP in CTC mode.
+- Fallback: PB0 / OC0A (Timer0, CTC toggle) gives a clean 50% square wave
+  with no duty control.
 - Tone generation: hardware timer in CTC mode toggling the output pin. No
-  bit-banging. Example: Timer0 at 8 MHz, prescaler 8: f = 1 MHz / (2 ·
-  (OCR0A + 1)), so 4.5 kHz → OCR0A ≈ 110.
+  bit-banging. Example with Timer0 at 8 MHz, prescaler 8: f = 1 MHz / (2 ·
+  (OCR0A + 1)), so 2.7 kHz → OCR0A ≈ 184. Compute the Timer1 equivalent in
+  the new session from the datasheet.
+- **Breadboard essentials for a bare chip:** 100 nF ceramic capacitor
+  directly across VCC (pin 8) and GND (pin 4); about 10 µF bulk on the 5 V
+  rail; 10 kΩ pull-up from RESET (pin 1) to VCC. The internal reset pull-up
+  is weak, and an office full of switching noise is a good way to find out.
 - **Silent state at reset:** pins are high-impedance until firmware runs.
   Add a 10 kΩ resistor holding the module input at its "off" level (pull-down
   for a high-triggered module, pull-up to 5 V for a low-triggered one). After
@@ -174,19 +189,27 @@ of that. Keep sound profiles as small tables in flash (`PROGMEM`).
 
 ## 6. Open questions to ask the owner first
 
-1. **Buzzer type.** Photo or markings of the 3-wire module. Quick test:
+Already answered by the owner: a 10-minute quiet period after power-on is
+fine; a 5–15-minute interval is fine; no fuse changes; the target is
+"annoying", not realism; either buzzer type is acceptable; the final build
+is a bare chip on an adhesive mini-breadboard (no USB board).
+
+Still open:
+
+1. **Buzzer type.** Still needed for the `BUZZER_PASSIVE` switch and the
+   pull resistor direction. Photo or markings of the 3-wire module. Quick test:
    connect VCC and GND to 5 V, then touch the signal pin to the level that
    triggers it. A continuous tone means **active**; a single click means
    **passive**. Also find out which level triggers it (high or low); many
    modules with a PNP transistor are **low-triggered**.
-2. **USB board LED.** Is there an LED on PB1 (pin 6)? Check for a small LED
-   and resistor on the board, or test continuity from socket pin 6.
-3. **Quiet period after power-on.** 10 minutes OK?
-4. **Interval.** Keep 5–15 minutes?
-5. **Repo name** for the new project.
-6. **Power switch.** A latching switch in series with USB 5 V is assumed.
-   (A momentary "soft power" button needs extra circuitry. Not recommended
-   for "very simple".)
+2. **How USB 5 V reaches the breadboard.** Recommend a small USB-C or
+   micro-USB breakout board (VBUS/GND pins) plus a latching switch in the
+   5 V line, all on the same adhesive breadboard. A cut USB cable also works.
+   Confirm what the owner has.
+3. **Repo name** for the new project.
+4. **Power switch part.** A latching switch in series with USB 5 V is
+   assumed. (A momentary "soft power" button needs extra circuitry. Not
+   recommended for "very simple".)
 
 ## 7. Working agreement for the new session
 
@@ -231,9 +254,12 @@ To be verified with the owner's existing rig. The typical Mega wiring:
   ArduinoISP, to stop the Mega auto-resetting when avrdude connects.
 - The ArduinoISP sketch defaults to 19200 baud and uses D10 for target reset.
   Confirmed from the sketch source.
-- **Program the chip on the Mega rig, then move it to the USB board.** Don't
-  leave the buzzer connected to PB0 or PB1 during programming: those are
-  MOSI/MISO, and the module input can corrupt programming.
+- **Program the chip on the Mega rig, then move it to the final
+  breadboard.** Don't leave the buzzer connected to PB0 or PB1 during
+  programming: those are MOSI/MISO (the buzzer will sit on PB1), and the
+  module input can corrupt programming. Alternatively, wire a 6-pin ISP
+  header on the final breadboard and unplug the buzzer signal wire while
+  flashing.
 
 ## 9. Deliverables in the new repo
 
