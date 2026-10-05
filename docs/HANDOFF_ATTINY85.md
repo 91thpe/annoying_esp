@@ -34,7 +34,7 @@ change behavior, edit and reflash.
 | MCU | ATtiny85, bare DIP-8 |
 | Final build | ATtiny85 on an adhesive-backed mini-breadboard. **The AliExpress micro-USB ATtiny85 board is not part of the final design** (at most a bench power source during development) |
 | Programmer | Arduino Mega running the ArduinoISP sketch (owner built it earlier) |
-| Buzzer | Generic 3-wire breadboard buzzer module (SIG / VCC / GND). Active or passive not yet confirmed; **either is acceptable to the owner** (see §4.3) |
+| Buzzer | Generic 3-wire breadboard buzzer module (SIG / VCC / GND). **Passive, high-triggered:** the owner tested it, and it clicks when SIG goes to 5 V and makes no tone on steady DC |
 | Power | USB 5 V via the owner's USB breakout board on the breadboard. On/off is a generic switch in the 5 V line, or simply unplugging a jumper wire. Battery is out of scope |
 | Spare parts | 2N3906 PNP transistors (useful now that logic is 5 V) |
 | Dev environment | Owner's VS Code + PlatformIO on their own PC |
@@ -202,14 +202,20 @@ is a bare chip on an adhesive mini-breadboard (no USB board); power comes
 from a USB breakout board, switched by a generic switch or by pulling a
 jumper wire; the repo is `annoying_attiny85`.
 
-Still open:
+Buzzer, resolved: **passive, triggered high** (clicks when SIG goes to 5 V).
+Consequences for the design:
 
-1. **Buzzer type.** Still needed for the `BUZZER_PASSIVE` switch and the
-   pull resistor direction. Photo or markings of the 3-wire module. Quick test:
-   connect VCC and GND to 5 V, then touch the signal pin to the level that
-   triggers it. A continuous tone means **active**; a single click means
-   **passive**. Also find out which level triggers it (high or low); many
-   modules with a PNP transistor are **low-triggered**.
+- `BUZZER_PASSIVE = 1`; tones come from Timer1 on PB1 as designed.
+- **10 kΩ pull-down** from SIG to GND keeps it silent before firmware runs.
+- **Idle level is LOW.** Never leave SIG high between sounds: on a magnetic
+  passive buzzer, that holds DC through the coil (wasted current, heat, no
+  sound). After every tone, disconnect the timer from PB1 and drive it LOW.
+- The 2.5–3 kHz carrier is a starting point; the `TEST_MODE` sweep shows
+  where this particular buzzer is loudest.
+
+No open hardware questions remain. Confirm the defaults with the owner and
+start milestone 1.
+
 Note for the README: **power-on with a pulled jumper.** Plugging a wire in
 can bounce power on and off a few times. That's harmless (each bounce just restarts the
 quiet period).
