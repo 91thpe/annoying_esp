@@ -1,7 +1,13 @@
 # Handoff: ATtiny85 office annoyance
 
-This is the starting brief for a new repository and a fresh Claude Code
-session. Paste it (or commit it as `docs/HANDOFF.md`) at the start of the new
+This is the starting brief for the new repository **`annoying_attiny85`**
+and a fresh Claude Code session.
+
+Repo description: *Hidden office noise maker: an ATtiny85 on a mini-breadboard
+plays short, hard-to-locate chirps at random 5–15 minute intervals. Plain
+avr-gcc in PlatformIO, flashed via an Arduino Mega as ISP.*
+
+This brief Paste it (or commit it as `docs/HANDOFF.md`) at the start of the new
 session. It replaces the earlier ESP32-S3/BLE "annoying_esp" project, which
 is parked.
 
@@ -28,8 +34,8 @@ change behavior, edit and reflash.
 | MCU | ATtiny85, bare DIP-8 |
 | Final build | ATtiny85 on an adhesive-backed mini-breadboard. **The AliExpress micro-USB ATtiny85 board is not part of the final design** (at most a bench power source during development) |
 | Programmer | Arduino Mega running the ArduinoISP sketch (owner built it earlier) |
-| Buzzer | 3-wire buzzer module (VCC / GND / signal). Active or passive not yet confirmed; **either is acceptable to the owner** (see §4.3) |
-| Power | USB 5 V into the breadboard (how exactly is an open question, §6). A simple latching power switch in the 5 V line. Battery is out of scope |
+| Buzzer | Generic 3-wire breadboard buzzer module (SIG / VCC / GND). Active or passive not yet confirmed; **either is acceptable to the owner** (see §4.3) |
+| Power | USB 5 V via the owner's USB breakout board on the breadboard. On/off is a generic switch in the 5 V line, or simply unplugging a jumper wire. Battery is out of scope |
 | Spare parts | 2N3906 PNP transistors (useful now that logic is 5 V) |
 | Dev environment | Owner's VS Code + PlatformIO on their own PC |
 
@@ -192,7 +198,9 @@ of that. Keep sound profiles as small tables in flash (`PROGMEM`).
 Already answered by the owner: a 10-minute quiet period after power-on is
 fine; a 5–15-minute interval is fine; no fuse changes; the target is
 "annoying", not realism; either buzzer type is acceptable; the final build
-is a bare chip on an adhesive mini-breadboard (no USB board).
+is a bare chip on an adhesive mini-breadboard (no USB board); power comes
+from a USB breakout board, switched by a generic switch or by pulling a
+jumper wire; the repo is `annoying_attiny85`.
 
 Still open:
 
@@ -202,14 +210,9 @@ Still open:
    triggers it. A continuous tone means **active**; a single click means
    **passive**. Also find out which level triggers it (high or low); many
    modules with a PNP transistor are **low-triggered**.
-2. **How USB 5 V reaches the breadboard.** Recommend a small USB-C or
-   micro-USB breakout board (VBUS/GND pins) plus a latching switch in the
-   5 V line, all on the same adhesive breadboard. A cut USB cable also works.
-   Confirm what the owner has.
-3. **Repo name** for the new project.
-4. **Power switch part.** A latching switch in series with USB 5 V is
-   assumed. (A momentary "soft power" button needs extra circuitry. Not
-   recommended for "very simple".)
+Note for the README: **power-on with a pulled jumper.** Plugging a wire in
+can bounce power on and off a few times. That's harmless (each bounce just restarts the
+quiet period).
 
 ## 7. Working agreement for the new session
 
